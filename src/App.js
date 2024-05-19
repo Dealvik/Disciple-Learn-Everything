@@ -53,6 +53,7 @@ function App() {
         title: newUnitName,
         dateCreated: "4/19/2024",
         content: newContent,
+        // content: newContent,
         userId: auth?.currentUser?.uid,
       });
 
