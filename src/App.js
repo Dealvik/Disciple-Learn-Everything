@@ -13,6 +13,8 @@ import {
 import { ref, uploadBytes } from "firebase/storage";
 
 function App() {
+  const [message, setMessage] = useState("");
+
   const [lessonList, setLessonList] = useState([]);
 
   // New Unit states
@@ -26,6 +28,12 @@ function App() {
   const [fileUpload, setFileUpload] = useState(null);
 
   const lessonsCollectionRef = collection(db, "lessons");
+
+  const fetchData = async () => {
+    fetch("http://localhost:3001/api/message")
+      .then((response) => response.json())
+      .then((data) => setMessage(data.message));
+  };
 
   const getLessonList = async () => {
     // Read the data
@@ -45,18 +53,25 @@ function App() {
 
   useEffect(() => {
     getLessonList();
+    fetchData();
   }, []);
 
   const onSubmitUnit = async () => {
     try {
+      // Fetch generated text from the server
+      const response = await fetch("http://localhost:3001/api/generate-text");
+      const data = await response.json();
+      const generatedText = data.message;
+
+      // Add the new unit with the generated text as content
       await addDoc(lessonsCollectionRef, {
         title: newUnitName,
-        dateCreated: "4/19/2024",
-        content: newContent,
-        // content: newContent,
+        dateCreated: new Date().toLocaleDateString(),
+        content: generatedText,
         userId: auth?.currentUser?.uid,
       });
 
+      // Update the lesson list to include the new unit
       getLessonList();
     } catch (err) {
       console.error(err);
@@ -94,21 +109,14 @@ function App() {
             setNewUnitName(e.target.value);
           }}
         />
-        <input
-          placeholder="Content..."
-          onChange={(e) => {
-            setNewContent(e.target.value);
-          }}
-        />
         <button onClick={onSubmitUnit}>Submit Unit</button>
       </div>
 
       <div>
         {lessonList.map((lesson) => (
-          <div style={{ color: "white" }}>
+          <div style={{ color: "white" }} key={lesson.id}>
             <h1> {lesson.title} </h1>
             <p> {lesson.content} </p>
-            {/* <p> {lesson.dateCreated} </p> */}
             <button onClick={() => deleteUnit(lesson.id)}>Delete Unit</button>
 
             <input
@@ -122,7 +130,6 @@ function App() {
         ))}
       </div>
 
-      {/* image sending  */}
       <div>
         <input
           type="file"
@@ -132,6 +139,10 @@ function App() {
         />
         <button onClick={uploadFile}>Upload File</button>
       </div>
+
+      <header className="App-header">
+        <h1 color="white">{message}</h1>
+      </header>
     </div>
   );
 }
