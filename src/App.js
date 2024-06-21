@@ -30,7 +30,9 @@ function App() {
   const lessonsCollectionRef = collection(db, "lessons");
 
   const fetchData = async () => {
-    fetch("http://localhost:3001/api/message")
+    fetch(
+      "https://us-central1-fir-full-stack-app.cloudfunctions.net/api/api/generate-text"
+    )
       .then((response) => response.json())
       .then((data) => setMessage(data.message));
   };
@@ -53,19 +55,21 @@ function App() {
 
   useEffect(() => {
     getLessonList();
-    fetchData();
+    // fetchData();
   }, []);
 
   const onSubmitUnit = async () => {
     try {
       // Fetch generated text from the server
-      const response = await fetch("http://localhost:3001/api/generate-text");
+      const response = await fetch(
+        "https://us-central1-fir-full-stack-app.cloudfunctions.net/api/api/generate-text"
+      );
       const data = await response.json();
       const generatedText = data.message;
 
       // Add the new unit with the generated text as content
       await addDoc(lessonsCollectionRef, {
-        title: newUnitName,
+        title: newUnitName || generatedText,
         dateCreated: new Date().toLocaleDateString(),
         content: generatedText,
         userId: auth?.currentUser?.uid,
@@ -81,11 +85,13 @@ function App() {
   const deleteUnit = async (id) => {
     const unitDoc = doc(db, "lessons", id);
     await deleteDoc(unitDoc);
+    getLessonList(); // Refresh lesson list after deletion
   };
 
   const updateUnitTitle = async (id) => {
     const unitDoc = doc(db, "lessons", id);
     await updateDoc(unitDoc, { title: updatedTitle });
+    getLessonList(); // Refresh lesson list after updating title
   };
 
   const uploadFile = async () => {
