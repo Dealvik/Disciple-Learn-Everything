@@ -5,13 +5,13 @@
 /.pnp
 .pnp.js
 
-/src/config
+./src/config
 
 # testing
-/coverage
+./coverage
 
 # production
-/build
+./build
 
 # misc
 .env
