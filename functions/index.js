@@ -8,6 +8,13 @@ dotenv.config();
 
 const app = express();
 
+// Remove or adjust these headers as needed
+app.use((req, res, next) => {
+  res.removeHeader("Cross-Origin-Opener-Policy");
+  res.removeHeader("Cross-Origin-Embedder-Policy");
+  next();
+});
+
 // Enable CORS
 app.use(cors({ origin: true }));
 

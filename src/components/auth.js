@@ -1,20 +1,31 @@
+import { useState } from "react";
 import { auth, googleProvider } from "../config/firebase";
 import {
   createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
   signInWithPopup,
-  signOut,
 } from "firebase/auth";
-import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import "../styles/auth.css"; // Importing the CSS file
 
 export const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const navigate = useNavigate();
 
-  console.log(auth?.currentUser?.email);
+  const handleSignIn = async () => {
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      navigate("/main");
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
-  const signIn = async () => {
+  const handleSignUp = async () => {
     try {
       await createUserWithEmailAndPassword(auth, email, password);
+      navigate("/main");
     } catch (err) {
       console.error(err);
     }
@@ -23,39 +34,54 @@ export const Auth = () => {
   const signInWithGoogle = async () => {
     try {
       await signInWithPopup(auth, googleProvider);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const logout = async () => {
-    try {
-      await signOut(auth);
+      navigate("/main");
     } catch (err) {
       console.error(err);
     }
   };
 
   return (
-    <div className="signInForm">
-      <h2 className="login-text">Log In</h2>
-      <input placeholder="Email" onChange={(e) => setEmail(e.target.value)} />
-      <input
-        placeholder="Password"
-        type="password"
-        onChange={(e) => setPassword(e.target.value)}
-      />
-      <button className="button-17 signin-button" onClick={signIn}>
-        Sign In
-      </button>
-
-      <button className="button-17" onClick={signInWithGoogle}>
-        Sign In With Google
-      </button>
-
-      <button className="button-17" onClick={logout}>
-        Logout
-      </button>
+    <div className="auth-container">
+      <div className="auth-modal">
+        <h1 className="auth-title">Sign in to Disciple </h1>
+        <button className="google-button" onClick={signInWithGoogle}>
+          <img
+            src="https://img.icons8.com/color/16/000000/google-logo.png"
+            alt="Google logo"
+          />
+          Continue with Google
+        </button>
+        <div className="divider">
+          <span>or</span>
+        </div>
+        <input
+          type="email"
+          className="auth-input"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+        <input
+          type="password"
+          className="auth-input"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+        <div>
+          <button className="auth-button" onClick={handleSignIn}>
+            Log in
+          </button>
+          <button className="auth-button" onClick={handleSignUp}>
+            Sign Up
+          </button>
+        </div>
+        <div className="auth-links">
+          <a href="#">Use single sign-on</a>
+          <a href="#">Reset password</a>
+          <a href="#">No account? Create one</a>
+        </div>
+      </div>
     </div>
   );
 };

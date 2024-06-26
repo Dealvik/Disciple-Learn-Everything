@@ -3,24 +3,28 @@
   position: relative;
   height: 100vh; /* Set the height of the container to full viewport height */
 }
-
-body {
-  background-color: #292834;
-  margin: 0; /* Remove default margin */
+/* App.css */
+body, html, #root {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: Arial, Helvetica, sans-serif;
+  background-color: #f7f7f7;
 }
 
+
 .login-text {
-  color: white;
+  text-align: center;
 }
 
 .signInForm {
-  /* position: absolute; */
+  position: absolute;
   top: 50%;
   left: 50%;
-  /* transform: translate(-50%, -50%); */
+  transform: translate(-50%, -50%);
   display: flex;
   flex-direction: column;
-  width: 70%;
+  /* width: 70%;*/
 }
 
 @media (min-width: 768px) {

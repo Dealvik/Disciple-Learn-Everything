@@ -1,12 +1,26 @@
 {
   "hosting": {
-    "public": "build",
+    "target": "web",
+    "public": "web/build",
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
     "rewrites": [
       {
         "source": "/api/**",
-        "function": "api"
+        "function": "api",
+        "destination": "/index.html"
       }
-    ]
+    ],
+    "headers": [
+        {
+          "source": "**/*",
+          "headers": [
+            {
+              "key": "Cross-Origin-Embedder-Policy",
+              "value": "unsafe-none"
+            }
+          ]
+        }
+      ]
   },
   "functions": {
     "source": "functions"

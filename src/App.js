@@ -1,155 +1,46 @@
-import { useEffect, useState } from "react";
-import "./App.css";
-import { Auth } from "./components/auth";
-import { db, auth, storage } from "./config/firebase";
 import {
-  getDocs,
-  addDoc,
-  deleteDoc,
-  updateDoc,
-  doc,
-  collection,
-} from "firebase/firestore";
-import { ref, uploadBytes } from "firebase/storage";
+  BrowserRouter as Router,
+  Route,
+  Routes,
+  Navigate,
+} from "react-router-dom";
+import { useState, useEffect } from "react";
+import "./styles/App.css";
+import { Auth } from "./components/auth";
+import { Main } from "./components/main";
+import { auth } from "./config/firebase";
 
 function App() {
-  const [message, setMessage] = useState("");
-
-  const [lessonList, setLessonList] = useState([]);
-
-  // New Unit states
-  const [newUnitName, setNewUnitName] = useState("");
-  const [newContent, setNewContent] = useState("");
-
-  // Update title state
-  const [updatedTitle, setUpdatedTitle] = useState("");
-
-  // File upload state
-  const [fileUpload, setFileUpload] = useState(null);
-
-  const lessonsCollectionRef = collection(db, "lessons");
-
-  const fetchData = async () => {
-    fetch(
-      "https://us-central1-fir-full-stack-app.cloudfunctions.net/api/api/generate-text"
-    )
-      .then((response) => response.json())
-      .then((data) => setMessage(data.message));
-  };
-
-  const getLessonList = async () => {
-    // Read the data
-    // Set the lesson list
-    try {
-      const data = await getDocs(lessonsCollectionRef);
-      const filteredData = data.docs.map((doc) => ({
-        ...doc.data(),
-        id: doc.id,
-      }));
-      setLessonList(filteredData);
-      console.log(filteredData);
-    } catch (err) {
-      console.error(err);
-    }
-  };
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loading, setLoading] = useState(true); // To handle loading state
 
   useEffect(() => {
-    getLessonList();
-    // fetchData();
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      setIsAuthenticated(!!user);
+      setLoading(false); // Set loading to false after determining auth state
+    });
+
+    return () => unsubscribe();
   }, []);
 
-  const onSubmitUnit = async () => {
-    try {
-      // Fetch generated text from the server
-      const response = await fetch(
-        "https://us-central1-fir-full-stack-app.cloudfunctions.net/api/api/generate-text"
-      );
-      const data = await response.json();
-      const generatedText = data.message;
-
-      // Add the new unit with the generated text as content
-      await addDoc(lessonsCollectionRef, {
-        title: newUnitName || generatedText,
-        dateCreated: new Date().toLocaleDateString(),
-        content: generatedText,
-        userId: auth?.currentUser?.uid,
-      });
-
-      // Update the lesson list to include the new unit
-      getLessonList();
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const deleteUnit = async (id) => {
-    const unitDoc = doc(db, "lessons", id);
-    await deleteDoc(unitDoc);
-    getLessonList(); // Refresh lesson list after deletion
-  };
-
-  const updateUnitTitle = async (id) => {
-    const unitDoc = doc(db, "lessons", id);
-    await updateDoc(unitDoc, { title: updatedTitle });
-    getLessonList(); // Refresh lesson list after updating title
-  };
-
-  const uploadFile = async () => {
-    if (!fileUpload) return;
-    const fileFolderRef = ref(storage, `projectFiles/${fileUpload.name}`);
-    try {
-      await uploadBytes(fileFolderRef, fileUpload);
-    } catch (err) {
-      console.error(err);
-    }
-  };
+  if (loading) {
+    return <div>Loading...</div>; // Show a loading message while determining auth state
+  }
 
   return (
-    <div className="App">
-      <Auth />
-
-      <div>
-        <input
-          placeholder="Unit name..."
-          onChange={(e) => {
-            setNewUnitName(e.target.value);
-          }}
+    <Router>
+      <Routes>
+        <Route path="/login" element={<Auth />} />
+        <Route
+          path="/main"
+          element={isAuthenticated ? <Main /> : <Navigate to="/login" />}
         />
-        <button onClick={onSubmitUnit}>Submit Unit</button>
-      </div>
-
-      <div>
-        {lessonList.map((lesson) => (
-          <div style={{ color: "white" }} key={lesson.id}>
-            <h1> {lesson.title} </h1>
-            <p> {lesson.content} </p>
-            <button onClick={() => deleteUnit(lesson.id)}>Delete Unit</button>
-
-            <input
-              placeholder="new title..."
-              onChange={(e) => setUpdatedTitle(e.target.value)}
-            />
-            <button onClick={() => updateUnitTitle(lesson.id)}>
-              Update Title
-            </button>
-          </div>
-        ))}
-      </div>
-
-      <div>
-        <input
-          type="file"
-          onChange={(e) => {
-            setFileUpload(e.target.files[0]);
-          }}
+        <Route
+          path="*"
+          element={<Navigate to={isAuthenticated ? "/main" : "/login"} />}
         />
-        <button onClick={uploadFile}>Upload File</button>
-      </div>
-
-      <header className="App-header">
-        <h1 color="white">{message}</h1>
-      </header>
-    </div>
+      </Routes>
+    </Router>
   );
 }
 

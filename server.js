@@ -8,6 +8,12 @@ const dotenv = require("dotenv");
 // Enable CORS
 app.use(cors());
 
+app.use((req, res, next) => {
+  res.removeHeader("Cross-Origin-Opener-Policy");
+  res.removeHeader("Cross-Origin-Embedder-Policy");
+  next();
+});
+
 dotenv.config();
 
 // Access your API key as an environment variable
