@@ -8,6 +8,7 @@ import { useState, useEffect } from "react";
 import "./styles/App.css";
 import { Auth } from "./components/auth";
 import { Main } from "./components/main";
+import { Lesson } from "./components/lesson";
 import { auth } from "./config/firebase";
 
 function App() {
@@ -34,6 +35,10 @@ function App() {
         <Route
           path="/main"
           element={isAuthenticated ? <Main /> : <Navigate to="/login" />}
+        />
+        <Route
+          path="/lesson/:id"
+          element={isAuthenticated ? <Lesson /> : <Navigate to="/login" />}
         />
         <Route
           path="*"

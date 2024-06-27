@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { db, auth, storage } from "../config/firebase";
 import {
   getDocs,
@@ -12,7 +12,8 @@ import {
 } from "firebase/firestore";
 import { ref, uploadBytes } from "firebase/storage";
 import { signOut } from "firebase/auth";
-import "../styles/Main.css";
+import { useNavigate } from "react-router-dom";
+import "../styles/main.css";
 
 export const Main = () => {
   const [message, setMessage] = useState("");
@@ -21,6 +22,7 @@ export const Main = () => {
   const [updatedTitle, setUpdatedTitle] = useState("");
   const [fileUpload, setFileUpload] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
+  const navigate = useNavigate();
 
   const lessonsCollectionRef = collection(db, "lessons");
 
@@ -71,6 +73,13 @@ export const Main = () => {
 
   const onSubmitUnit = async () => {
     if (!auth.currentUser) return;
+
+    if (lessonList.length >= 1) {
+      alert(
+        "You can only create one unit. Please delete your existing unit to create a new one."
+      );
+      return;
+    }
 
     try {
       const response = await fetch(
@@ -138,65 +147,88 @@ export const Main = () => {
   };
 
   return (
-    <div className="main-container">
-      {currentUser && (
-        <div className="header">
-          <p>Welcome, {currentUser.email}</p>
-          <button className="logout-button" onClick={handleLogout}>
-            Logout
-          </button>
-        </div>
-      )}
-
-      <div className="unit-input">
-        <input
-          placeholder="Unit name..."
-          onChange={(e) => {
-            setNewUnitName(e.target.value);
-          }}
-        />
-        <button onClick={onSubmitUnit}>Submit Unit</button>
+    <div className="container">
+      <div className="left-sidebar">
+        <nav>
+          <ul>
+            <li>
+              <a href="#home">Home</a>
+            </li>
+            <li>
+              <a href="#profile">Profile</a>
+            </li>
+            <li>
+              <a href="#lessons">Lessons</a>
+            </li>
+            <li>
+              <a href="#settings">Settings</a>
+            </li>
+          </ul>
+        </nav>
       </div>
 
-      <div className="lesson-list">
-        {lessonList.map((lesson) => (
-          <div className="lesson-card" key={lesson.id}>
-            <h1>{lesson.title}</h1>
-            <p>{lesson.content}</p>
-            <button
-              className="delete-button"
-              onClick={() => deleteUnit(lesson.id)}
-            >
-              Delete Unit
-            </button>
-
-            <input
-              placeholder="new title..."
-              onChange={(e) => setUpdatedTitle(e.target.value)}
-            />
-            <button
-              className="update-button"
-              onClick={() => updateUnitTitle(lesson.id)}
-            >
-              Update Title
+      <div className="main-content">
+        {currentUser && (
+          <div className="header">
+            <p>Welcome, {currentUser.email}</p>
+            <button className="logout-button" onClick={handleLogout}>
+              Logout
             </button>
           </div>
-        ))}
+        )}
+
+        <div className="unit-input">
+          <input
+            placeholder="Unit name..."
+            onChange={(e) => {
+              setNewUnitName(e.target.value);
+            }}
+          />
+          <button onClick={onSubmitUnit}>Submit Unit</button>
+        </div>
+
+        <div className="lesson-list">
+          {lessonList.map((lesson) => (
+            <div className="lesson-card" key={lesson.id}>
+              <h1 onClick={() => navigate(`/lesson/${lesson.id}`)}>
+                {lesson.title}
+              </h1>
+              <p>{lesson.content}</p>
+              <button
+                className="delete-button"
+                onClick={() => deleteUnit(lesson.id)}
+              >
+                Delete Unit
+              </button>
+            </div>
+          ))}
+        </div>
+
+        <div className="file-upload">
+          <input
+            type="file"
+            onChange={(e) => {
+              setFileUpload(e.target.files[0]);
+            }}
+          />
+          <button onClick={uploadFile}>Upload File</button>
+        </div>
+
+        <header className="App-header">
+          <h1>{message}</h1>
+        </header>
       </div>
 
-      <div className="file-upload">
-        <input
-          type="file"
-          onChange={(e) => {
-            setFileUpload(e.target.files[0]);
-          }}
-        />
-        <button onClick={uploadFile}>Upload File</button>
+      <div className="right-sidebar">
+        <div className="profile-info">
+          <h2>Profile</h2>
+          {currentUser && <p>{currentUser.email}</p>}
+        </div>
+        <div className="other-info">
+          <h2>Other Info</h2>
+          <p>Additional content goes here</p>
+        </div>
       </div>
-
-      <header className="App-header">
-        <h1>{message}</h1>
-      </header>
     </div>
   );
 };
